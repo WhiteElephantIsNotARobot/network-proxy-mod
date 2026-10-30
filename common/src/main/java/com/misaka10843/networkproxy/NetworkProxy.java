@@ -28,6 +28,7 @@ public final class NetworkProxy {
 
     private static ProxyConfig config;
     private static boolean initialized;
+    private static boolean configLogged;
 
     private NetworkProxy() {
     }
@@ -45,6 +46,12 @@ public final class NetworkProxy {
     public static ProxyConfig getConfig() {
         if (config == null) {
             config = ConfigManager.load();
+        }
+        if (!configLogged) {
+            configLogged = true;
+            LOGGER.info("NetworkProxy config {}: enabled={}, type={}, host={}, port={}, useForDownloads={}, useFilter={}, domains={}",
+                    ConfigManager.configPath(), config.enabled, config.type, config.host, config.port,
+                    config.useForDownloads, config.useFilter, config.proxyDomains);
         }
         return config;
     }

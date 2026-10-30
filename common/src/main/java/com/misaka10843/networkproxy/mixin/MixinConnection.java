@@ -26,6 +26,7 @@ public class MixinConnection {
 
     @Inject(method = "configurePacketHandler", at = @At("HEAD"))
     private void networkproxy$injectSmartProxyRouter(ChannelPipeline pipeline, CallbackInfo ci) {
+        NetworkProxy.LOGGER.info("NetworkProxy: installing proxy router into pipeline");
         pipeline.addFirst("smart_proxy_router", new ChannelOutboundHandlerAdapter() {
             @Override
             public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress,
@@ -67,7 +68,12 @@ public class MixinConnection {
                                 ctx.pipeline().addFirst("proxy", new Socks5ProxyHandler(proxyAddr));
                             }
                         }
+                    } else {
+                        NetworkProxy.LOGGER.info("Connecting directly to: {} (enabled={}, useFilter={})",
+                                targetAddr.getHostString(), config.enabled, config.useFilter);
                     }
+                } else {
+                    NetworkProxy.LOGGER.warn("NetworkProxy: connect with non-InetSocketAddress {}", remoteAddress);
                 }
 
                 ctx.pipeline().remove(this);
