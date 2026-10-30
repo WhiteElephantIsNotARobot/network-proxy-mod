@@ -50,7 +50,8 @@ public class MixinConnection {
                     }
 
                     if (shouldProxy) {
-                        NetworkProxy.LOGGER.info("Routing through proxy to: {}", targetAddr.getHostString());
+                        NetworkProxy.LOGGER.info("Routing {} through {} proxy {}:{}",
+                                targetAddr.getHostString(), config.type, config.host, config.port);
                         InetSocketAddress proxyAddr = new InetSocketAddress(config.host, config.port);
                         String user = config.username;
                         String pass = config.password;

@@ -58,6 +58,9 @@ public final class NetworkProxy {
 
     public static void saveConfig() {
         ConfigManager.save(getConfig());
+        LOGGER.info("NetworkProxy config saved: enabled={}, type={}, host={}, port={}, useForDownloads={}, useFilter={}, domains={}",
+                config.enabled, config.type, config.host, config.port, config.useForDownloads, config.useFilter,
+                config.proxyDomains);
     }
 
     /**
