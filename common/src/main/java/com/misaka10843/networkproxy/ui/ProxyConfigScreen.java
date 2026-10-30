@@ -12,6 +12,8 @@ import net.minecraft.network.chat.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Hand-written vanilla config screen. No Cloth Config, no ModMenu, no other
@@ -29,10 +31,6 @@ public class ProxyConfigScreen extends Screen {
     private final Screen parent;
 
     private ProxyConfig config;
-    private CycleButton<Boolean> enabledButton;
-    private CycleButton<Boolean> useForDownloadsButton;
-    private CycleButton<Boolean> useFilterButton;
-    private CycleButton<ProxyConfig.ProxyType> typeButton;
     private EditBox hostBox;
     private EditBox portBox;
     private EditBox usernameBox;
@@ -51,29 +49,23 @@ public class ProxyConfigScreen extends Screen {
         int fieldX = fieldX();
         int y = START_Y;
 
-        this.enabledButton = CycleButton.onOffBuilder(config.enabled)
-                .create(fieldX, y, FIELD_WIDTH, FIELD_HEIGHT,
-                        Component.translatable("config.networkproxy.enabled"),
-                        (button, value) -> config.enabled = value);
+        this.addRenderableWidget(toggle(fieldX, y,
+                () -> config.enabled, value -> config.enabled = value));
         y += ROW_HEIGHT;
 
-        this.useForDownloadsButton = CycleButton.onOffBuilder(config.useForDownloads)
-                .create(fieldX, y, FIELD_WIDTH, FIELD_HEIGHT,
-                        Component.translatable("config.networkproxy.use_for_downloads"),
-                        (button, value) -> config.useForDownloads = value);
+        this.addRenderableWidget(toggle(fieldX, y,
+                () -> config.useForDownloads, value -> config.useForDownloads = value));
         y += ROW_HEIGHT;
 
-        this.useFilterButton = CycleButton.onOffBuilder(config.useFilter)
-                .create(fieldX, y, FIELD_WIDTH, FIELD_HEIGHT,
-                        Component.translatable("config.networkproxy.use_filter"),
-                        (button, value) -> config.useFilter = value);
+        this.addRenderableWidget(toggle(fieldX, y,
+                () -> config.useFilter, value -> config.useFilter = value));
         y += ROW_HEIGHT;
 
-        this.typeButton = CycleButton.builder(type -> Component.literal(type.name()), config.type)
+        this.addRenderableWidget(CycleButton.builder(type -> Component.literal(type.name()), config.type)
                 .withValues(ProxyConfig.ProxyType.values())
                 .create(fieldX, y, FIELD_WIDTH, FIELD_HEIGHT,
                         Component.translatable("config.networkproxy.type"),
-                        (button, value) -> config.type = value);
+                        (button, value) -> config.type = value));
         y += ROW_HEIGHT;
 
         this.hostBox = textField(fieldX, y, Component.translatable("config.networkproxy.host"),
@@ -101,6 +93,22 @@ public class ProxyConfigScreen extends Screen {
                 .build());
     }
 
+    /**
+     * Vanilla {@link CycleButton} only renders the current value, so the setting
+     * name is drawn separately as a row label. A plain toggle keeps the ON/OFF
+     * state obvious and lets the label say what is being toggled.
+     */
+    private Button toggle(int x, int y, Supplier<Boolean> getter, Consumer<Boolean> setter) {
+        return Button.builder(onOff(getter.get()), button -> {
+            setter.accept(!getter.get());
+            button.setMessage(onOff(getter.get()));
+        }).bounds(x, y, FIELD_WIDTH, FIELD_HEIGHT).build();
+    }
+
+    private static Component onOff(boolean value) {
+        return Component.translatable(value ? "options.on" : "options.off");
+    }
+
     private EditBox textField(int x, int y, Component label, String value, int maxLength) {
         EditBox box = new EditBox(this.font, x, y, FIELD_WIDTH, FIELD_HEIGHT, label);
         box.setMaxLength(maxLength);
@@ -118,7 +126,12 @@ public class ProxyConfigScreen extends Screen {
         super.extractRenderState(extractor, mouseX, mouseY, partialTick);
 
         int y = START_Y;
-        y += ROW_HEIGHT * 3; // three toggle rows (their labels are the button messages)
+        drawLabel(extractor, Component.translatable("config.networkproxy.enabled"), y);
+        y += ROW_HEIGHT;
+        drawLabel(extractor, Component.translatable("config.networkproxy.use_for_downloads"), y);
+        y += ROW_HEIGHT;
+        drawLabel(extractor, Component.translatable("config.networkproxy.use_filter"), y);
+        y += ROW_HEIGHT;
         drawLabel(extractor, Component.translatable("config.networkproxy.type"), y);
         y += ROW_HEIGHT;
         drawLabel(extractor, Component.translatable("config.networkproxy.host"), y);
@@ -138,11 +151,6 @@ public class ProxyConfigScreen extends Screen {
     }
 
     private void saveAndClose() {
-        config.enabled = enabledButton.getValue();
-        config.useForDownloads = useForDownloadsButton.getValue();
-        config.useFilter = useFilterButton.getValue();
-        config.type = typeButton.getValue();
-
         config.host = hostBox.getValue().trim();
         try {
             int port = Integer.parseInt(portBox.getValue().trim());
