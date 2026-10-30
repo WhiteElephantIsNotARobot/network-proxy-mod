@@ -3,7 +3,7 @@
 A Minecraft **client-side** mod with support for HTTP/SOCKS5 proxies and
 per-server (per-domain) proxy configuration.
 
-- **Minecraft:** 26.2
+- **Minecraft:** 26.3
 - **Loaders:** Fabric **and** NeoForge (single shared codebase)
 - **Dependencies:** none beyond the loader itself — no Cloth Config, no ModMenu,
   no Fabric API. The config UI is hand-written with vanilla widgets and the
@@ -18,8 +18,8 @@ per-server (per-domain) proxy configuration.
 - Optional username/password authentication.
 - Config file: `<gameDir>/config/networkproxy.json` (same path AutoConfig used,
   so existing configs carry over).
-- Config UI reachable from the **pause menu** ("Network Proxy Settings" button);
-  on NeoForge also from the mods list "Config" button.
+- Config UI reachable from the **Join Multiplayer screen** ("Network Proxy
+  Settings" button); on NeoForge also from the mods list "Config" button.
 
 ## Building
 

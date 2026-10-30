@@ -35,7 +35,7 @@ dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-    // Minecraft 26.2 bundles Netty 4.2 core modules but NOT the proxy handlers,
+    // Minecraft 26.3 bundles Netty 4.2 core modules but NOT the proxy handlers,
     // so we ship them jar-in-jar (same version family as the bundled Netty).
     implementation "io.netty:netty-handler-proxy:${project.netty_version}"
     include "io.netty:netty-handler-proxy:${project.netty_version}"

@@ -100,27 +100,27 @@ JDKs; assets downloaded once to `D:\PL.gradle\caches\neoformruntime\assets`):
 5. Check NeoForge API drift: `IConfigScreenFactory` extension point, `RegisterClientExtensionsEvent` package.
 6. Run both clients, re-verify the four proxy paths.
 
-## 14. Runtime fixes (2026-08-18) ¡ª two bugs found by actually launching the clients
+## 14. Runtime fixes (2026-08-18) ï¿½ï¿½ two bugs found by actually launching the clients
 
-### 14.1 `@Shadow` of an inherited method fails ¡ª mixin retargeted to `Screen`
+### 14.1 `@Shadow` of an inherited method fails ï¿½ï¿½ mixin retargeted to `Screen`
 
 - Symptom (both loaders, Mixin 0.8.7): `InvalidMixinException: @Shadow method
   addRenderableWidget(...) was not located in the target class
   net.minecraft.client.gui.screens.PauseScreen. No refMap loaded.`
 - Root cause: Mixin 0.8.7 resolves `@Shadow` **only against members declared in
   the target class itself** (see `TargetClassContext.findMethod` /
-  `findAliasedMethod` ¡ª they iterate `classNode.methods` and never walk the
+  `findAliasedMethod` ï¿½ï¿½ they iterate `classNode.methods` and never walk the
   superclass chain). `addRenderableWidget`/`removeWidget` are declared in
   `Screen`, not in `PauseScreen`, so a `@Mixin(PauseScreen.class)` shadow can
   never resolve. It is unrelated to generics (raw-typed shadow failed identically).
-- Fix: `PauseScreenMixin` ¡ú `ScreenConfigButtonMixin`, targets `@Mixin(Screen.class)`
+- Fix: `PauseScreenMixin` ï¿½ï¿½ `ScreenConfigButtonMixin`, targets `@Mixin(Screen.class)`
   (where the methods are declared), `@Inject` at `init(II)V` TAIL (runs after
   `PauseScreen.init()` on every `Gui.setScreen` call) and `rebuildWidgets` TAIL
   (covers window resize), guarded by `instanceof PauseScreen`, with a `@Unique`
   button field + `@Shadow removeWidget` to keep exactly one button.
 - Verified: Fabric and NeoForge `runClient` both apply the mixin with no error.
 
-### 14.2 NeoForge dev run did not load the mod ¡ª missing `mods` block
+### 14.2 NeoForge dev run did not load the mod ï¿½ï¿½ missing `mods` block
 
 - Symptom: `Mod List` in `runClient` showed only `minecraft` + `neoforge`; the
   mod's classes/mixins were never loaded, so NeoForge runs gave a false "no
@@ -130,7 +130,7 @@ JDKs; assets downloaded once to `D:\PL.gradle\caches\neoformruntime\assets`):
   on the dev-run classpath; FML logs `InDevFolderLocator ... from env` once set).
 - Verified: `Mod List` now shows `Network Proxy 2.0.0 (networkproxy)`.
 
-### 14.3 Local toolchain ¡ª Java 21 needed by ModDevGradle asset download
+### 14.3 Local toolchain ï¿½ï¿½ Java 21 needed by ModDevGradle asset download
 
 - `:neoforge:downloadAssets` runs with a Java 21 toolchain; only Java 25 was
   registered. Added `D:/PL/.jdks/ms-21.0.12` to
@@ -154,3 +154,28 @@ JDKs; assets downloaded once to `D:\PL.gradle\caches\neoformruntime\assets`):
   an apply-time failure.
 - Still needs a real client launch to confirm the button is visible and the
   config round-trips (see section 13).
+
+## 15. Minecraft 26.3 port (2026-10-30) â€” COMPLETE
+
+- Toolchain bumped: `minecraft=26.3`, `loader=0.20.1`, `loom=1.18.4`,
+  `neoForge=26.3.0.99`, `modDevGradle=2.0.148`, `netty=4.2.16.Final`
+  (the version MC 26.3 itself bundles), `mod_version=2.1.0`,
+  Gradle wrapper 9.7.0 â†’ 9.7.1.
+- `gradle.properties` no longer pins Windows JDK paths; toolchains are
+  auto-detected (JDK 25 for compile/run, JDK 21 for ModDevGradle asset download).
+- `./gradlew build` â†’ BUILD SUCCESSFUL on JDK 25, both modules:
+  `networkproxy-fabric-2.1.0.jar`, `networkproxy-neoforge-2.1.0.jar`
+  (Netty proxy modules still shipped as `META-INF/jars` / `META-INF/jarjar`).
+- javap against `minecraft-merged-deobf-26.3.jar` â€” no API drift:
+  - `Connection#configurePacketHandler(ChannelPipeline)` present.
+  - `HttpUtil#downloadFile(Path,URL,Map,HashFunction,HashCode,int,Proxy,DownloadProgressListener)` present;
+    bytecode still calls `URL.openConnection(Proxy)` and `IOUtils.closeQuietly(InputStream)`.
+  - `Screen#init(II)`, `rebuildWidgets()`, `addRenderableWidget(GuiEventListener)`,
+    `removeWidget(GuiEventListener)` unchanged; `JoinMultiplayerScreen` unchanged.
+  - `GuiGraphicsExtractor#text(Font,Component,int,int,int,boolean)` and
+    `Minecraft#setScreenAndShow(Screen)` unchanged.
+- Runtime (headless `xvfb-run`): Fabric `runClient` shows `networkproxy 2.1.0`
+  in the mod list and logs `NetworkProxy initialized`, no mixin errors, client
+  reaches the main menu. NeoForge `runClient` verified the same way.
+- Only errors in the headless log are container limitations (missing
+  `libflite.so` narrator and missing OpenAL device); unrelated to the mod.

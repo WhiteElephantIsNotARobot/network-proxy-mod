@@ -52,7 +52,7 @@ neoForge {
 dependencies {
     implementation "net.neoforged:neoforge:${project.neoForge_version}"
 
-    // Minecraft 26.2 bundles Netty 4.2 core modules but NOT the proxy handlers,
+    // Minecraft 26.3 bundles Netty 4.2 core modules but NOT the proxy handlers,
     // so we ship them via JarJar (same version family as the bundled Netty).
     jarJar(implementation("io.netty:netty-handler-proxy:${project.netty_version}")) {
         version {
